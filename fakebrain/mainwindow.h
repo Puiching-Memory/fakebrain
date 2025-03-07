@@ -2,6 +2,11 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "HMultiControlSDK.h"
+#include "dataset.h"
+#include "hdatasystem_interface.h"
+
+using namespace hnnk;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -16,6 +21,8 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+    HMultiControlSDK *m_multiControl;
 
 private:
     Ui::MainWindow *ui;
