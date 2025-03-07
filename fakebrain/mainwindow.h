@@ -23,6 +23,7 @@ public:
     ~MainWindow();
 
     HMultiControlSDK *m_multiControl;
+    hnnk::HDataSystem_interface *m_dataSystemSDK;
 
 private:
     Ui::MainWindow *ui;
