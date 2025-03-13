@@ -41,14 +41,18 @@ private slots:
     void on_ButtonConnect_clicked();
     void on_ButtonResetXY_clicked();
     void on_ButtonRefresh_clicked();
-    void onGyroData();
-    void onDeviceName();
-    void onConnectChange();
-    void onBlinkDetectionResult();
-    void onAttenDetectionResult();
-
-
     void on_ButtonLogin_clicked();
+    void on_ButtonCode_clicked();
+    void on_SliderSensitive_valueChanged(int value);
+
+    // SDK
+    void onDeviceName(QString name);
+    void onConnectChange(int state);
+    void onCaliTrigger();
+    void onCalibrationResult(bool isOk, float score);
+    void onBlinkDetectionResult(int val);
+    void onAttenDetectionResult(double val);
+    void onGyroData(double x, double y);
 
 private:
     Ui::MainWindow *ui;

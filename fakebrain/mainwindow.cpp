@@ -29,20 +29,22 @@ MainWindow::MainWindow(QWidget *parent)
     // 绑定QT事件槽
     connect(m_multiControl, &HMultiControlSDK::notifyDeviceNameUpdate, this, &MainWindow::onDeviceName);
     connect(m_multiControl, &HMultiControlSDK::notifyConnectState, this, &MainWindow::onConnectChange);
-    //connect(m_multiControl, &HMultiControlSDK::notifyCaliTrigger, this, &MainWindow::onCaliTrigger);
-    //connect(m_multiControl, &HMultiControlSDK::notifyCalibrationResult, this, &MainWindow::onCalibrationResult);
+    connect(m_multiControl, &HMultiControlSDK::notifyCaliTrigger, this, &MainWindow::onCaliTrigger);
+    connect(m_multiControl, &HMultiControlSDK::notifyCalibrationResult, this, &MainWindow::onCalibrationResult);
     connect(m_multiControl, &HMultiControlSDK::notifyBlinkDetectionResult, this, &MainWindow::onBlinkDetectionResult);
     connect(m_multiControl, &HMultiControlSDK::notifyAttenDetectionResult, this, &MainWindow::onAttenDetectionResult);
     connect(m_multiControl ,&HMultiControlSDK::emitGyroData,this,&MainWindow::onGyroData);
 
-    //connect(this, &MainWindow::sig_ButtonRefresh_clicked, this, &MainWindow::on_ButtonRefresh_clicked);
+    // 初始化ui
+    ui->labelOnnxPath->setText("ONNX Path:" + m_multiControl->getModelDir().path());
+
 }
 
 MainWindow::~MainWindow()
 {
-    delete ui;
     tcpSocket_game->abort();
     tcpSocket_python->abort();
+    delete ui;
 }
 
 void MainWindow::on_ButtonConnect_clicked()
@@ -67,41 +69,83 @@ void MainWindow::on_ButtonRefresh_clicked()
 
 void MainWindow::on_ButtonLogin_clicked()
 {
+    qDebug("尝试登录...");
+}
+
+void MainWindow::on_ButtonCode_clicked()
+{
     QPixmap pixmapValidateCode;
     QString stringValidateCode;
 
     m_multiControl->getGraphValidateCode(pixmapValidateCode,stringValidateCode);
-    qDebug("生成验证码:");
-    qDebug() << stringValidateCode;
+    qDebug() << "生成验证码" << stringValidateCode;
+
+    pixmapValidateCode = pixmapValidateCode.scaled(ui->LabelCode->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    ui->LabelCode->setPixmap(pixmapValidateCode);
+}
+
+void MainWindow::on_SliderSensitive_valueChanged(int value)
+{
+    qDebug() << "更改灵敏度:" << value;
+    m_multiControl->setSensitivity(value);
+
+    std::string stringsensitive;
+    stringsensitive += "灵敏度=";
+    stringsensitive += std::to_string(value);
+    ui->labelSensitive->setText(stringsensitive.c_str());
 }
 
 
 
 
-void MainWindow::onGyroData()
+
+
+
+void MainWindow::onGyroData(double GyroX,double GyroY)
 {
-    qDebug("接受到陀螺仪数据");
+
+    qDebug() << "接受到陀螺仪数据:" << GyroX << "|" << GyroY;
+
+    std::string ss;
+    ss += "1,";
+    ss += std::to_string(GyroX);
+    ss += ",";
+    ss += std::to_string(GyroY);
+
     qDebug("向TCP端口发送数据");
-    tcpSocket_python->write("hello");
+    tcpSocket_python->write(ss.c_str());
+
+    ui->lcdGyroX->setDigitCount(GyroX);
+    ui->lcdGyroY->setDigitCount(GyroY);
 }
 
-void MainWindow::onDeviceName()
+void MainWindow::onDeviceName(QString name)
 {
-    qDebug("获取设备名称");
+    qDebug() << "获取设备名称" << name;
 }
 
-void MainWindow::onConnectChange()
+void MainWindow::onConnectChange(int state)
 {
-    qDebug("设备链接状态改变");
+    qDebug() << "设备链接状态改变:" << state;
 }
 
-void MainWindow::onBlinkDetectionResult()
+void MainWindow::onBlinkDetectionResult(int val)
 {
-    qDebug("接收到眨眼数据");
+    qDebug() << "接收到眨眼数据:" << val;
 }
 
-void MainWindow::onAttenDetectionResult()
+void MainWindow::onAttenDetectionResult(double val)
 {
-    qDebug("接受到注意力数据");
+    qDebug() << "接受到注意力数据:" << val;
+    ui->lcdAtten->setDigitCount(val);
 }
 
+void MainWindow::onCaliTrigger()
+{
+    qDebug() << "校准标识触发";
+}
+
+void MainWindow::onCalibrationResult(bool isOk, float score)
+{
+    qDebug() << "眨眼检测校准:" << isOk << "得分:" << score;
+}

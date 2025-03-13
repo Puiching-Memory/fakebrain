@@ -63,7 +63,7 @@
      <string>陀螺仪</string>
     </property>
    </widget>
-   <widget class="QLCDNumber" name="lcdNumber">
+   <widget class="QLCDNumber" name="lcdGyroX">
     <property name="geometry">
      <rect>
       <x>200</x>
@@ -85,7 +85,7 @@
      <number>9999</number>
     </property>
    </widget>
-   <widget class="QLCDNumber" name="lcdNumber_2">
+   <widget class="QLCDNumber" name="lcdGyroY">
     <property name="geometry">
      <rect>
       <x>280</x>
@@ -140,7 +140,7 @@
      <string>注意力</string>
     </property>
    </widget>
-   <widget class="QLCDNumber" name="lcdNumber_3">
+   <widget class="QLCDNumber" name="lcdAtten">
     <property name="geometry">
      <rect>
       <x>200</x>
@@ -185,7 +185,7 @@
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="QLabel" name="label_6">
+   <widget class="QLabel" name="labelOnnxPath">
     <property name="geometry">
      <rect>
       <x>200</x>
@@ -211,7 +211,7 @@
      <string> 坐标回正</string>
     </property>
    </widget>
-   <widget class="QSlider" name="horizontalSlider">
+   <widget class="QSlider" name="SliderSensitive">
     <property name="geometry">
      <rect>
       <x>460</x>
@@ -239,7 +239,7 @@
      <enum>QSlider::TickPosition::TicksAbove</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="label_7">
+   <widget class="QLabel" name="labelSensitive">
     <property name="geometry">
      <rect>
       <x>460</x>
@@ -360,7 +360,7 @@
      <string>端口_game：9528</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QLabel" name="LabelCode">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -371,6 +371,19 @@
     </property>
     <property name="text">
      <string/>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ButtonCode">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>480</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>获取验证码</string>
     </property>
    </widget>
   </widget>
