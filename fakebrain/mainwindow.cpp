@@ -35,6 +35,17 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_multiControl, &HMultiControlSDK::notifyAttenDetectionResult, this, &MainWindow::onAttenDetectionResult);
     connect(m_multiControl ,&HMultiControlSDK::emitGyroData,this,&MainWindow::onGyroData);
 
+    connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitEvent, this, &MainWindow::onReciveEegData);
+    connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitChsAndSampRate, this, &MainWindow::onDeviceChannelAndSampRate);
+    connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitAddtionData, this, &MainWindow::onAddtionData);
+    // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitDeviceName, this, &MainWindow::onDeviceActive);
+    // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitSearchNetDeviceOver, this, &MainWindow::onSearchNetDeviceOver);
+    // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitConnectChange, this, &MainWindow::onConnectState);
+    connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitUpdateAmpTestInfo, this, &MainWindow::onUpdateSelfCheckInfo);
+    // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitEdfData, this, &MainWindow::onReadEdfDataToDouble);
+    // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitSearchNetDeviceOver, this, &MainWindow::onSearchNetDeviceOver);
+    // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitMsgBox, this, &MainWindow::onMsg);
+
     // 初始化ui
     ui->labelOnnxPath->setText("ONNX Path:" + m_multiControl->getModelDir().path());
 
@@ -49,8 +60,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_ButtonConnect_clicked()
 {
-    qDebug("链接到设备");
-    m_multiControl->connectDevice("COM1");
+    //QString deviceName = ui->listDevice->item(ui->listDevice->currentRow())->text();
+    //qDebug() << "链接到设备:" << deviceName;
+    QString deviceName = "COM1";
+    m_multiControl->connectDevice(deviceName);
+
+    //获取设备信息
+    hnnk::BasicParameter devicedata = m_dataSystemSDK->getParameter();
+
+    //启动算法检测
+    m_multiControl->launchBlinkDetection(1,"C:/workspace/github/fakebrain/fakebrain/model_files/converted_blink_network.onnx");
+
+    //启动数据采集
+    m_dataSystemSDK->eventDispatcher(DataAppOperator::DAO_READEEGDATA, QVariant(QVariant::Int));
 }
 
 
@@ -122,6 +144,7 @@ void MainWindow::onGyroData(double GyroX,double GyroY)
 void MainWindow::onDeviceName(QString name)
 {
     qDebug() << "获取设备名称" << name;
+    ui->listDevice->addItem(name);
 }
 
 void MainWindow::onConnectChange(int state)
@@ -148,4 +171,45 @@ void MainWindow::onCaliTrigger()
 void MainWindow::onCalibrationResult(bool isOk, float score)
 {
     qDebug() << "眨眼检测校准:" << isOk << "得分:" << score;
+}
+
+
+
+
+
+
+void MainWindow::onDeviceChannelAndSampRate(int channels, int srate)
+{
+    qDebug() << "通道数:" << channels << "srate:" << srate;
+}
+
+void MainWindow::onUpdateSelfCheckInfo(AmpTestInfo ampInfo)
+{
+    qDebug()<<" amp status "<<ampInfo.m_ampStatus;
+    qDebug()<<" battary status "<<ampInfo.m_battaryStatus;
+    qDebug()<<" gyr status "<<ampInfo.m_gyrStatus;
+    qDebug()<<" blue status "<<ampInfo.m_blueStatus;
+}
+
+void MainWindow::onReciveEegData(QVector<EegDataChan> eegVec)
+{
+    std::vector<double> eegData;
+    for(auto &it : eegVec){
+        eegData.insert(eegData.end(), it.data.begin(), it.data.end());
+    }
+
+    BasicParameter parameter = m_dataSystemSDK->getParameter();
+
+    qDebug() << "数据格式:" << parameter.m_battaryStatus << parameter.m_Magnification;
+}
+
+void MainWindow::onAddtionData(QVector<GYRODATA> gyroDatas,QVector<unsigned char>channoff, double battery)
+{
+    //附加数据事件
+    QString gyroStr = QString("陀螺仪数据:r:%1,y:%2,p:%3").
+                      arg(QString::number((double)gyroDatas[0].x_angle,'f',2), -6, '0').
+                      arg(QString::number((double)gyroDatas[0].y_angle,'f',2), -6, '0').
+                      arg(QString::number((double)gyroDatas[0].z_angle,'f',2), -6, '0');
+
+    qDebug() << gyroStr;
 }
