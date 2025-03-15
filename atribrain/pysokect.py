@@ -1,4 +1,5 @@
 import socket
+import json
 
 # 定义服务器地址和端口号
 HOST = '127.0.0.1'  # 本机回环地址

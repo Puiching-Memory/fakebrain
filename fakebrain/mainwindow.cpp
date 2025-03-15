@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
     //设置License
     m_multiControl->setLicense("c180dec8f4d94af6be5860436ca26003");
     //启动数据采集模块
-    m_multiControl->lauchCollector(DATA_SECONDGENERAL, NET_COM);
+    m_multiControl->lauchCollector(DATA_FIRSTGENERAL, NET_COM);
 
     // 初始化数据SDK
     m_dataSystemSDK = new hnnk::HDataSystem_interface();
@@ -24,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
     tcpSocket_python->connectToHost("localhost",9529);
     tcpSocket_game->connectToHost("localhost",9528);
 
-    tcpSocket_python->write("hello");
+    //tcpSocket_python->write("hello");
 
     // 绑定QT事件槽
     connect(m_multiControl, &HMultiControlSDK::notifyDeviceNameUpdate, this, &MainWindow::onDeviceName);
@@ -38,16 +38,21 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitEvent, this, &MainWindow::onReciveEegData);
     connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitChsAndSampRate, this, &MainWindow::onDeviceChannelAndSampRate);
     connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitAddtionData, this, &MainWindow::onAddtionData);
+    connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitUpdateAmpTestInfo, this, &MainWindow::onUpdateSelfCheckInfo);
+
     // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitDeviceName, this, &MainWindow::onDeviceActive);
     // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitSearchNetDeviceOver, this, &MainWindow::onSearchNetDeviceOver);
     // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitConnectChange, this, &MainWindow::onConnectState);
-    connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitUpdateAmpTestInfo, this, &MainWindow::onUpdateSelfCheckInfo);
     // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitEdfData, this, &MainWindow::onReadEdfDataToDouble);
     // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitSearchNetDeviceOver, this, &MainWindow::onSearchNetDeviceOver);
     // connect(m_dataSystemSDK, &hnnk::HDataSystem_interface::emitMsgBox, this, &MainWindow::onMsg);
 
     // 初始化ui
     ui->labelOnnxPath->setText("ONNX Path:" + m_multiControl->getModelDir().path());
+
+    //为方便显示陀螺仪坐标结果，设置一个虚拟光标图标
+    main_vmouse = new VMouseMainWindow();
+    main_vmouse->setStyleSheet("background-color:yellow");
 
 }
 
@@ -60,16 +65,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_ButtonConnect_clicked()
 {
-    //QString deviceName = ui->listDevice->item(ui->listDevice->currentRow())->text();
-    //qDebug() << "链接到设备:" << deviceName;
-    QString deviceName = "COM1";
+    QString deviceName = ui->listDevice->item(ui->listDevice->currentRow())->text();
+    QString errMsg;
+
+    qDebug() << "链接到设备:" << deviceName;
     m_multiControl->connectDevice(deviceName);
 
     //获取设备信息
     hnnk::BasicParameter devicedata = m_dataSystemSDK->getParameter();
 
     //启动算法检测
-    m_multiControl->launchBlinkDetection(1,"C:/workspace/github/fakebrain/fakebrain/model_files/converted_blink_network.onnx");
+    //errMsg = m_multiControl->launchBlinkDetection(1,"C:/workspace/github/fakebrain/fakebrain/model_files/converted_blink_network.onnx");
+    errMsg = m_multiControl->launchBlinkDetection(2);
+    qDebug() << "启动算法检测:" << errMsg;
 
     //启动数据采集
     m_dataSystemSDK->eventDispatcher(DataAppOperator::DAO_READEEGDATA, QVariant(QVariant::Int));
@@ -91,7 +99,18 @@ void MainWindow::on_ButtonRefresh_clicked()
 
 void MainWindow::on_ButtonLogin_clicked()
 {
-    qDebug("尝试登录...");
+    QString account = ui->lineUserName->text();
+    QString password = ui->lineUserPassword->text();
+    QString captcha = ui->lineCodeValue->text();
+    QString captchaId = ui->lineCodeID->text();
+
+    QString msgErr;
+
+    qDebug() << "尝试登录...";
+    // msgErr = m_multiControl->registAccounter(account, password, captcha, captchaId); // 注册
+    msgErr = m_multiControl->login(account, password, captcha, captchaId);           // 登录
+
+    qDebug() << "登录结果:" << msgErr;
 }
 
 void MainWindow::on_ButtonCode_clicked()
@@ -102,7 +121,7 @@ void MainWindow::on_ButtonCode_clicked()
     m_multiControl->getGraphValidateCode(pixmapValidateCode,stringValidateCode);
     qDebug() << "生成验证码" << stringValidateCode;
 
-    pixmapValidateCode = pixmapValidateCode.scaled(ui->LabelCode->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    ui->LabelCode->setScaledContents(true);
     ui->LabelCode->setPixmap(pixmapValidateCode);
 }
 
@@ -126,7 +145,7 @@ void MainWindow::on_SliderSensitive_valueChanged(int value)
 void MainWindow::onGyroData(double GyroX,double GyroY)
 {
 
-    qDebug() << "接受到陀螺仪数据:" << GyroX << "|" << GyroY;
+    // qDebug() << "接受到陀螺仪数据:" << GyroX << "|" << GyroY;
 
     std::string ss;
     ss += "1,";
@@ -134,11 +153,17 @@ void MainWindow::onGyroData(double GyroX,double GyroY)
     ss += ",";
     ss += std::to_string(GyroY);
 
-    qDebug("向TCP端口发送数据");
+    // qDebug("向TCP端口发送数据");
     tcpSocket_python->write(ss.c_str());
+    //tcpSocket_python->write("123");
 
-    ui->lcdGyroX->setDigitCount(GyroX);
-    ui->lcdGyroY->setDigitCount(GyroY);
+    int Gy = (int)GyroY;
+    int Gx = (int)GyroX;
+
+    ui->lcdGyroX->display(Gx);
+    ui->lcdGyroY->display(Gy);
+
+    main_vmouse->move(GyroX,GyroY);
 }
 
 void MainWindow::onDeviceName(QString name)
@@ -149,7 +174,14 @@ void MainWindow::onDeviceName(QString name)
 
 void MainWindow::onConnectChange(int state)
 {
-    qDebug() << "设备链接状态改变:" << state;
+    if(state == 0)
+    {
+        qDebug() << "设备未链接";
+    }
+    else
+    {
+        qDebug() << "设备已链接";
+    }
 }
 
 void MainWindow::onBlinkDetectionResult(int val)
@@ -160,7 +192,7 @@ void MainWindow::onBlinkDetectionResult(int val)
 void MainWindow::onAttenDetectionResult(double val)
 {
     qDebug() << "接受到注意力数据:" << val;
-    ui->lcdAtten->setDigitCount(val);
+    ui->lcdAtten->display(val);
 }
 
 void MainWindow::onCaliTrigger()

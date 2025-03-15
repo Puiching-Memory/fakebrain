@@ -9,6 +9,7 @@
 #include "HMultiControlSDK.h"
 #include "dataset.h"
 #include "hdatasystem_interface.h"
+#include "vmousemainwindow.h"
 
 using namespace hnnk;
 
@@ -33,6 +34,8 @@ public:
 
     QTcpSocket *tcpSocket_python;
     QTcpSocket *tcpSocket_game;
+
+    VMouseMainWindow *main_vmouse;
 
 signals:
     // void sig_ButtonRefresh_clicked();
