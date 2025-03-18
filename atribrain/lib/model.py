@@ -33,12 +33,15 @@ class model(nn.Module):
 
 
 if __name__ == "__main__":
-    model = model()
+    test_model = model()
+    test_model.to("xpu")
 
-    x = torch.rand(3, 149)
-    y = model(x)
+    for i in range(10000):
 
-    print(x.shape)
-    print(y.shape)
+        x = torch.rand(3, 2000, device="xpu")
+        y = test_model(x)
+
+        print(x.device)
+        print(y.device)
     # print(x)
     # print(y)

@@ -146,15 +146,6 @@ void MainWindow::onGyroData(double GyroX,double GyroY)
 {
 
     // qDebug() << "接受到陀螺仪数据:" << GyroX << "|" << GyroY;
-
-    std::string ss;
-    ss += "1,";
-    ss += std::to_string(GyroX);
-    ss += ",";
-    ss += std::to_string(GyroY);
-
-    // qDebug("向TCP端口发送数据");
-    tcpSocket_python->write(ss.c_str());
     //tcpSocket_python->write("123");
 
     int Gy = (int)GyroY;
@@ -164,6 +155,15 @@ void MainWindow::onGyroData(double GyroX,double GyroY)
     ui->lcdGyroY->display(Gy);
 
     main_vmouse->move(GyroX,GyroY);
+
+    std::string ss;
+    ss += "1,";
+    ss += std::to_string(Gx);
+    ss += ",";
+    ss += std::to_string(Gy);
+
+    // qDebug("向TCP端口发送数据");
+    tcpSocket_python->write(ss.c_str());
 }
 
 void MainWindow::onDeviceName(QString name)
