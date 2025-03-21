@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
     //为方便显示陀螺仪坐标结果，设置一个虚拟光标图标
     main_vmouse = new VMouseMainWindow();
     main_vmouse->setStyleSheet("background-color:yellow");
+    main_vmouse->hide();
 
 }
 
@@ -150,20 +151,54 @@ void MainWindow::onGyroData(double GyroX,double GyroY)
 
     int Gy = (int)GyroY;
     int Gx = (int)GyroX;
+    int attenint = static_cast<int>(atten * 100);;
+    int absX = (GyroX * 65535) / GetSystemMetrics(SM_CXSCREEN);
+    int absY = (GyroY * 65535) / GetSystemMetrics(SM_CYSCREEN);
 
     ui->lcdGyroX->display(Gx);
     ui->lcdGyroY->display(Gy);
 
     main_vmouse->move(GyroX,GyroY);
+    SetCursorPos(GyroX*getDpiScale(),GyroY*getDpiScale());
+    //QCursor::setPos(Gx, Gy);
+
 
     std::string ss;
     ss += "1,";
     ss += std::to_string(Gx);
     ss += ",";
     ss += std::to_string(Gy);
+    ss += ",";
+    ss += std::to_string(attenint);
+    ss += ",";
+    ss += std::to_string(blink);
 
-    // qDebug("向TCP端口发送数据");
+    // qDebug("向TCP端口发送数据") << attenint;
+
     tcpSocket_python->write(ss.c_str());
+
+    //如果固定在一个范围内一段时间，则发送一个鼠标点击事件
+    if (std::abs(lastPosX-Gx) < 15 && std::abs(lastPosY-Gy) < 15)
+    {
+        if (focusCount > 100)
+        {
+            mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN,absX, absY, 0, 0);
+            mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, absX, absY, 0, 0);
+            focusCount = 0;
+            qDebug() << "发送点击事件";
+        }
+        else
+        {
+            focusCount += 1;
+        }
+    }
+    else
+    {
+        focusCount = 0;
+    }
+
+    lastPosX = Gx;
+    lastPosY = Gy;
 }
 
 void MainWindow::onDeviceName(QString name)
@@ -187,12 +222,14 @@ void MainWindow::onConnectChange(int state)
 void MainWindow::onBlinkDetectionResult(int val)
 {
     qDebug() << "接收到眨眼数据:" << val;
+    blink = val;
 }
 
 void MainWindow::onAttenDetectionResult(double val)
 {
     qDebug() << "接受到注意力数据:" << val;
     ui->lcdAtten->display(val);
+    atten = val;
 }
 
 void MainWindow::onCaliTrigger()
@@ -244,4 +281,20 @@ void MainWindow::onAddtionData(QVector<GYRODATA> gyroDatas,QVector<unsigned char
                       arg(QString::number((double)gyroDatas[0].z_angle,'f',2), -6, '0');
 
     qDebug() << gyroStr;
+}
+
+
+double getDpiScale() {
+    HDC hdc = GetDC(NULL);  // 获取主显示器的设备上下文
+    if (!hdc) {
+        qWarning() << "Failed to get device context.";
+        return 1.0;  // 默认返回 100% 缩放
+    }
+
+    int logicalDpi = GetDeviceCaps(hdc, LOGPIXELSX);  // 获取水平 DPI
+    ReleaseDC(NULL, hdc);  // 释放设备上下文
+
+    // 计算缩放比例（DPI / 96）
+    double scale = static_cast<double>(logicalDpi) / 96.0;
+    return scale;
 }

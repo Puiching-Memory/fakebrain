@@ -11,6 +11,9 @@
 #include "hdatasystem_interface.h"
 #include "vmousemainwindow.h"
 
+#include "windows.h"
+#include <QCursor>
+
 using namespace hnnk;
 
 QT_BEGIN_NAMESPACE
@@ -36,6 +39,11 @@ public:
     QTcpSocket *tcpSocket_game;
 
     VMouseMainWindow *main_vmouse;
+
+    int lastPosX=0,lastPosY=0;
+    int focusCount = 0;
+    int blink = 0;
+    double atten = 0;
 
 signals:
     // void sig_ButtonRefresh_clicked();
@@ -112,8 +120,9 @@ private slots:
      */
     //void onSearchNetDeviceOver();
 
-
 private:
     Ui::MainWindow *ui;
 };
 #endif // MAINWINDOW_H
+
+double getDpiScale();

@@ -2,6 +2,7 @@
 import socket
 import time
 import pyautogui # pip install pyautogui==0.9.54
+import random
 
 # 服务器配置
 SERVER_IP = "127.0.0.1"  # 服务器IP地址
@@ -31,8 +32,11 @@ def send_mouse_position():
             # 发送数据（添加换行符作为消息分隔符）
             message = f"1,{pos}".encode("utf-8")
             client_socket.sendall(message)
-            
-            # 打印发送内容
+            print(f"Sent: {message.decode().strip()}")
+
+            # 发送眨眼检测
+            message = f"2,{random.randint(0,100)},{random.randint(0,1)}".encode("utf-8")
+            client_socket.sendall(message)
             print(f"Sent: {message.decode().strip()}")
             
             # 等待间隔

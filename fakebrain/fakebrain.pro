@@ -38,3 +38,5 @@ LIBS += $$PWD/thirdparty_libs/onnxruntime/onnxruntime_providers_shared.lib
 LIBS += $$PWD/thirdparty_libs/onnxruntime/onnxruntime_providers_sharedd.lib
 LIBS += $$PWD/thirdparty_libs/onnxruntime/onnxruntimed.lib
 LIBS += $$PWD/thirdparty_libs/fftw3/libfftw3-3.lib
+
+win32: LIBS += -lgdi32
