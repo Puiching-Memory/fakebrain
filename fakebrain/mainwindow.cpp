@@ -55,6 +55,10 @@ MainWindow::MainWindow(QWidget *parent)
     main_vmouse->setStyleSheet("background-color:yellow");
     main_vmouse->hide();
 
+    //绑定快捷键
+    QShortcut* shortcut = new QShortcut(QKeySequence("E"), this);
+    //shortcut->setAutoRepeat(false);
+    connect(shortcut, &QShortcut::activated, this, &MainWindow::on_ButtonResetXY_clicked);
 }
 
 MainWindow::~MainWindow()

@@ -5,6 +5,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QDebug>
+#include <QShortcut>
 
 #include "HMultiControlSDK.h"
 #include "dataset.h"
