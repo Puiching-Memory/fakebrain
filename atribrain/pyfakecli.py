@@ -30,12 +30,7 @@ def send_mouse_position():
             # 获取坐标
             pos = get_mouse_position()
             # 发送数据（添加换行符作为消息分隔符）
-            message = f"1,{pos}".encode("utf-8")
-            client_socket.sendall(message)
-            print(f"Sent: {message.decode().strip()}")
-
-            # 发送眨眼检测
-            message = f"2,{random.randint(0,100)},{random.randint(0,1)}".encode("utf-8")
+            message = f"1,{pos},{random.randint(1,100)},{random.randint(0,1)}".encode("utf-8")
             client_socket.sendall(message)
             print(f"Sent: {message.decode().strip()}")
             
